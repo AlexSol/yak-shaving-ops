@@ -1,7 +1,6 @@
 # Nginx
 
-Nginx - це дуже швидкий "посередник", <br>
-який роздає веб-сторінки, зображення, файли, або пересилає запити до інших сервісів (наприклад, backend-API).
+Nginx - вебсервер і проксі-сервер, який роздає веб-сторінки, зображення, файли, або пересилає запити до інших сервісів (наприклад, backend-API).
 
 ### Приклад схеми роботи
 ```mermaid
@@ -20,7 +19,7 @@ flowchart TD
 4. Backend повертає дані назад через Nginx до користувача.
 
 ### Основні можливості Nginx:
-1. Веб-сервер (static server) - Роздає статичні файли (HTML, CSS, JS, зображення) напряму користувачу.
+1. Веб-сервер (static server) - Роздає статичні файли (HTML, CSS, JS, зображення) напряму користувачу. [Приклад налаштування](./StaticServer.md)
 2. Reverse Proxy - Приймає запити і передає їх на інший сервер (наприклад, твій C++ backend). Це дозволяє сховати внутрішню інфраструктуру.
 3. Load Balancing - Розподіляє навантаження між кількома серверами — щоб один не перевантажувався.
 4. Cache (кешування) - Зберігає копії відповідей, щоб не навантажувати бекенд однаковими запитами.
@@ -35,20 +34,6 @@ flowchart TD
 13. Virtual hosts - Підтримує кілька сайтів на одному сервері (наприклад, example.com і example.org).
 14. Reverse proxy buffering - Буферизує запити/відповіді для кращої продуктивності.
 
-### Приклад схеми роботи Nginx як багатоцільового сервера
-
-```mermaid
-graph TD
-    A[Nginx] --> B[Web Server]
-    A --> C[Reverse Proxy]
-    A --> D[Load Balancer]
-    A --> E[HTTP Cache]
-    B --> F[Static Content]
-    B --> G[Dynamic Content via FastCGI/Proxy]
-    C --> H[Forward Requests to Backend Servers]
-    D --> I[Distribute Traffic Among Servers]
-    E --> J[Cache Responses for Faster Delivery]
-```
 
 ## [Встановлення Nginx](./Installation.md)
 ## Basic Nginx Configuration
@@ -71,3 +56,19 @@ nginx: configuration file /etc/nginx/nginx.conf test is successful
 - nginx -T — вивід всієї конфігурації (включаючи підключені файли)
 - nginx -t -c /path/to/nginx.conf — перевірка конкретного файлу конфігурації
 - nginx -s reload — перезавантаження конфігурації без зупинки сервера
+--- 
+
+### Приклад схеми роботи Nginx як багатоцільового сервера
+
+```mermaid
+graph TD
+    A[Nginx] --> B[Web Server]
+    A --> C[Reverse Proxy]
+    A --> D[Load Balancer]
+    A --> E[HTTP Cache]
+    B --> F[Static Content]
+    B --> G[Dynamic Content via FastCGI/Proxy]
+    C --> H[Forward Requests to Backend Servers]
+    D --> I[Distribute Traffic Among Servers]
+    E --> J[Cache Responses for Faster Delivery]
+```
