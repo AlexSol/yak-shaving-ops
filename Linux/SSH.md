@@ -8,11 +8,24 @@ SSH працює за моделлю клієнт-сервер. Клієнт і�
 
 ## Step by Step інструкція по налаштуванню SSH
 1. Встановіть SSH-клієнт (якщо він ще не встановлений).
-    - На Ubuntu/Debian:
+    
+    На Ubuntu/Debian:
     ```sh
         sudo apt-get install openssh-client
     ```
-    - На CentOS/RHEL:
+
+    На CentOS/RHEL:
+    ```sh
+        sudo yum install openssh-clients
+    ```
+    
+2. Встановіть SSH-сервер на віддаленій машині (якщо він ще не встановлений).
+    - На Ubuntu/Debian: `sudo apt-get install openssh-server`
+    - На CentOS/RHEL: `sudo yum install openssh-server`
+3. Запустіть SSH-сервер (якщо він ще не запущений).
+    - `sudo systemctl start ssh` (Ubuntu/Debian)
+    - `sudo systemctl start sshd` (CentOS/RHEL)
+4. Перевірте статус SSH-сервера.
     ```sh
         sudo yum install openssh-clients
     ```
