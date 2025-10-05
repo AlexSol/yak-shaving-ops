@@ -20,7 +20,7 @@ flowchart TD
 4. Якщо файл відсутній, Nginx повертає помилку 404 Not Found.
 
 ### Налаштування Nginx як статичного сервера
-1. Встанови Nginx (див. [Installation.md](./Installation.md)).
+1. Встанови Nginx (див. [Installation](./Installation.md)).
 2. Створи каталог для сайту в `/var/www/`:
    ```sh
     mkdir -p /var/www/my-static-site
@@ -50,8 +50,8 @@ flowchart TD
 
 4. Налаштуй конфігурацію Nginx:
    не будемо змінювати основний конфігураційний файл `nginx.conf`, а створимо новий сайт в каталозі `/etc/nginx/sites-available`
-   <br>Шлях: /etc/nginx/sites-available/my-static-site.conf
-   <br>Створи файл `/etc/nginx/sites-available/my-static-site.conf
+   <br>Шлях: `/etc/nginx/sites-available/my-static-site.conf`
+   <br>Створи файл `/etc/nginx/sites-available/my-static-site.conf`
 
     ```
     sudo nano /etc/nginx/sites-available/my-static-site.conf
@@ -72,11 +72,11 @@ flowchart TD
    ```
 
     Пояснення:
-    - listen 8080; — приймати запити на порт 8080 (HTTP). Наша сайт буде доступний за адресою `http://localhost:8080` або `http://your_domain.com:8080`.
-    - server_name — домен (можна змінити на localhost або IP).
-    - root — папка, де лежать файли сайту.
-    - index — файл, який відкривається за замовчуванням.
-    - try_files — перевіряє, чи існує файл; якщо ні — віддає 404.
+    - `listen 8080;` — приймати запити на порт 8080 (HTTP). Наша сайт буде доступний за адресою `http://localhost:8080` або `http://your_domain.com:8080`.
+    - `server_name` — домен (можна змінити на localhost або IP).
+    - `root` — папка, де лежать файли сайту.
+    - `index` — файл, який відкривається за замовчуванням.
+    - `try_files` — перевіряє, чи існує файл; якщо ні — віддає 404.
 
 5. Активуй сайт 
 
@@ -120,7 +120,122 @@ flowchart TD
     sudo tail -f /var/log/nginx/error.log
     ```
 
+---
 
+Зараз сайт доступний на `http://localhost:8080`
+Але ми хочемо щоб сайт був доступний за адресою `http://localhost/my-site` і при цьому без порту (тобто на стандартному 80).
+
+потрібно змінити конфігурацію `/etc/nginx/sites-available/my-static-site.conf`
+```nginx
+   server {
+        listen 80;
+        server_name localhost;  # твій домен або IP
+
+        location = /my-site {
+            return 302 /my-site/;
+        }
+
+        location /my-site/ {
+            alias  /var/www/my-static-site/;
+            index index.html;
+            try_files $uri $uri/ =404;
+        }
+   }
+```
+
+Інша версія з rewrite:
+
+```nginx
+   server {
+        listen 80;
+        server_name localhost;  # твій домен або IP
+
+        location = /my-site {
+            rewrite ^ /my-site/ last;   # внутрішній rewrite → клієнт отримає 200
+        }
+
+        location /my-site/ {
+            alias  /var/www/my-static-site/;
+            index index.html;
+            try_files $uri $uri/ =404;
+        }
+   }
+```
+
+Пояснення:
+- `listen 80;` — сайт доступний за http://localhost/
+- `location /my-site` — відповідає за URL, який починається з /my-site
+- `alias` — каже Nginx: цей URL насправді відповідає цій папці
+(відрізняється від root, бо alias не додає /my-site до шляху)
+- `try_files` — перевіряє, чи існує файл або директорія
+- `index index.html;` — що показувати, якщо запитано директорію
+
+Перевір конфігурацію і перезавантаж Nginx:
+```sh
+sudo nginx -t && sudo systemctl restart nginx
+```
+
+Тепер сайт буде доступний за адресою `http://localhost/my-site` (без порту) 
+<br>і якщо ми відкриємо `http://localhost/my-site/`(СЛЕШ в кінці) то він коректно працювати у браузері.
+
+Перевірити можна через curl:
+```sh
+curl -L http://localhost/my-site
+curl -L http://localhost/my-site/
+```
+
+### Примітки:
+- Використовуйте `curl -L` для перевірки редиректів.
+
+Коли користувач (або браузер) звертається за:
+```
+http://localhost/my-site
+```
+
+а в конфігу вказано:
+```nginx
+location /my-site/ {
+    alias /var/www/my-static-site/;
+}
+```
+
+Nginx не вважає /my-site і /my-site/ одним і тим самим шляхом.
+<br>Тобто:
+- `/my-site` → НЕ підпадає під location /my-site/
+- `/my-site/` → підпадає, і тоді все працює.
+
+Тому без спеціального блоку /my-site — користувач отримає 404 (саме це ти бачив у логах раніше).
+
+Рішення №1 — зовнішній редірект (з return 302)
+```nginx
+location = /my-site {
+    return 302 /my-site/;
+}
+```
+Як працює:
+- Коли запитують `/my-site`, сервер каже:
+- -> "йди на /my-site/"
+(повертає HTTP-код `302 Found` або `301 Moved Permanently`)
+Браузер бачить це і робить новий запит на `/my-site/`.
+
+
+Рішення №2 — внутрішній редірект (з rewrite)
+```nginx
+location = /my-site {
+    rewrite ^ /my-site/ last;
+}
+```
+
+Як працює:
+- Коли запитують `/my-site`, Nginx всередині себе переписує шлях на `/my-site/`.
+- Клієнт (браузер, curl, API) не бачить редіректу — отримує одразу 200 OK.
+
+---
+- Якщо це *публічний сайт / документація / SPA* — краще `return 301` або `302`, бо браузери і пошуковики так очікують.
+- Якщо це *внутрішній веб-сервіс* або *технічний роут*, і ти хочеш мінімум "шуму" — використовуй `rewrite ... last`.
+
+
+---
 
 ### Додаткові можливості
 - Налаштування кешування статичних файлів.
