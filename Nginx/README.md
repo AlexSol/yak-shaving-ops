@@ -50,3 +50,24 @@ graph TD
     E --> J[Cache Responses for Faster Delivery]
 ```
 
+## [Встановлення Nginx](./Installation.md)
+## Basic Nginx Configuration
+Каталог конфігурації сервера зазвичай знаходиться в `/etc/nginx/` (Linux) або `/usr/local/nginx/conf/` (залежить від способу встановлення).
+
+`nginx.conf` - Основний конфігураційний файл.
+
+### Перевірка конфігурації Nginx
+```sh
+nginx -t
+```
+Якщо конфігурація правильна, побачиш:
+```
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+
+### Варіанти команди:
+- nginx -t — базова перевірка синтаксису
+- nginx -T — вивід всієї конфігурації (включаючи підключені файли)
+- nginx -t -c /path/to/nginx.conf — перевірка конкретного файлу конфігурації
+- nginx -s reload — перезавантаження конфігурації без зупинки сервера
